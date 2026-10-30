@@ -1,6 +1,6 @@
 # REFIT washing-machine disaggregation
 
-We estimate washing-machine power from one-minute whole-home readings using a simple activity classifier and an active-power regressor. On House 3, minute F1 is 42.84% and cycle F1 is 52.09%, with 9.0-minute median matched start error. Stage 2 active-minute MAE is 347.23 W versus 462.28 W for the plain classifier, while overall MAE is 48.49 versus 32.13 W. Both named splits and six-house LOHO show where results transfer and where they fail.
+We estimate washing-machine power from one-minute whole-home readings using a simple activity classifier and an active-power regressor. On House 3, minute F1 is 42.84% and cycle F1 is 52.09%, with 9.0-minute median matched start error. Stage 2 lowers active-minute MAE (six-house mean 357 W vs 480 W) but raises overall MAE, RMSE and total-energy error. Both models share one classifier, so minute F1 is identical.Both named splits and six-house LOHO show where results transfer and where they fail.
 
 | Evaluation | Model | MAE W | Active MAE W | F1 % | Energy error % |
 | --- | --- | --- | --- | --- | --- |
@@ -11,7 +11,7 @@ We estimate washing-machine power from one-minute whole-home readings using a si
 | House 3 test | two_stage_hgb | 48.487 | 347.226 | 42.836 | 53.030 |
 | 6-house mean | two_stage_hgb | 46.667 | 356.673 | 36.995 | 78.569 |
 
-Overlapping high-power appliances cause false positives; 94.34% of House 3 evaluated minutes are below the 20 W activity threshold. House 3 overall MAE is 48.49 W versus always-off 28.65 W; total-energy error is 53.03% versus hourly-profile 15.86%. Across six houses, always-off mean MAE is 26.23 W and usage_profile mean energy error is 61.79%. The suitable use is evaluated cycle timing and opt-in feedback, not appliance billing.
+House 3 overall MAE is 48.49 W vs 28.65 W for always-off (six-house mean 46.67 W vs 26.23 W). Total-energy error is 53.03% (six-house mean 78.57%) vs 15.86% for the hourly profile on House 3 (six-house mean 61.79%). Neither gives reliable energy totals. The suitable use is opt-in cycle-timing feedback, not billing.
 
 ## Model choice
 
@@ -41,9 +41,18 @@ The model uses a 60-minute rolling minimum, 15/30/60-minute rolling mean/max/std
 
 Two household splits are evaluated along with a fixed six-fold leave-one-house-out rotation. No held-out fold chooses its own parameters. Further work should add independent households, verify reference cycle labels and compare programme-aware models. Off-time, overlapping loads, sensor polling and missing data limit interpretation.
 
+## Model choice
+An earlier, more complex variant (centered future-context windows, soft probability gating, constrained validation search) scored higher on House 3 (minute F1 60.1%, cycle F1 60.7%). I dropped it because it used future data and was harder to justify. Houses 3 and 8 were examined during that work, so House 3 is not a pristine holdout; this is why leave-one-house-out results are reported.
+
+## Not implemented
+A non-ML heating-plateau baseline, post-hoc energy calibration, Seq2Point/HMM models and an empirical 15/30-minute resampling test were not run. See RESULTS.md for the effect on conclusions.
+
 ## References and implementation
 
 The author set the requirements and selected or approved the cleaning thresholds, cycle rule, final model, validation and pilot design. AI coding tools assisted design refinement, script implementation, debugging, drafting and plot formatting; results are checked against the saved outputs.
+
+## AI tools used
+I designed the cleaning thresholds, cycle rule, model, validation splits and pilot. An AI coding assistant (OpenAI Codex) helped implement scripts, debug and draft report text. I reviewed the outputs.
 
 - Murray, Stankovic & Stankovic (2017), [REFIT data descriptor](https://doi.org/10.1038/sdata.2016.122). Dataset: [University of Strathclyde](https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements/), CC BY 4.0.
 - Zhang et al. (2018), [Seq2Point](https://doi.org/10.1609/aaai.v32i1.11873), related context-window research; this implementation uses tabular trees, not that neural model.
