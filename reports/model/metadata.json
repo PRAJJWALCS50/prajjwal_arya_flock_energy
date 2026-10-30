@@ -1,0 +1,61 @@
+{
+  "folds": [
+    {
+      "test_house": 1,
+      "validation_house": 2,
+      "training_houses": "3,7,8,10",
+      "threshold": 0.05,
+      "median_active_power_W": 115.80000305175781
+    },
+    {
+      "test_house": 2,
+      "validation_house": 1,
+      "training_houses": "3,7,8,10",
+      "threshold": 0.5,
+      "median_active_power_W": 115.80000305175781
+    },
+    {
+      "test_house": 3,
+      "validation_house": 8,
+      "training_houses": "1,2,7,10",
+      "threshold": 0.8,
+      "median_active_power_W": 108.11111450195312
+    },
+    {
+      "test_house": 7,
+      "validation_house": 10,
+      "training_houses": "1,2,3,8",
+      "threshold": 0.7,
+      "median_active_power_W": 113.78889465332031
+    },
+    {
+      "test_house": 8,
+      "validation_house": 7,
+      "training_houses": "1,2,3,10",
+      "threshold": 0.75,
+      "median_active_power_W": 110.75
+    },
+    {
+      "test_house": 10,
+      "validation_house": 3,
+      "training_houses": "1,2,7,8",
+      "threshold": 0.8,
+      "median_active_power_W": 108.69999694824219
+    }
+  ],
+  "features": [
+    "aggregate",
+    "base_load",
+    "net_aggregate",
+    "mean_15",
+    "max_15",
+    "std_15",
+    "mean_30",
+    "max_30",
+    "std_30",
+    "mean_60",
+    "max_60",
+    "std_60"
+  ],
+  "run_length_minutes": 10
+}

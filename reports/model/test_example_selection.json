@@ -1,0 +1,14 @@
+{
+  "day": "2014-06-03 00:00:00+01:00",
+  "usable_minutes": 1440,
+  "cycle_start": "2014-06-03 07:48:00+01:00",
+  "cycle_end": "2014-06-03 08:53:00+01:00",
+  "duration_minutes": 65,
+  "energy_kwh": 0.5435234490833334,
+  "representativeness_distance": 0.1899863874034915,
+  "cycle_F1_pct": 66.66666666666666,
+  "active_MAE_W": 364.9520387286037,
+  "distance_to_median_daily_F1": 0.0,
+  "timezone": "Europe/London",
+  "selection": "complete observed day; selected reference cycle nearest household medians; nearest median daily cycle F1; representative-cycle distance and date break ties"
+}

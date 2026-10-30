@@ -1,0 +1,10 @@
+channel,appliance,mean_W_at_false_alarm
+Appliance9,Kettle,1862.4
+Appliance3,Freezer,88.7
+Appliance2,Fridge-Freezer,83.6
+Appliance1,Toaster,0.0
+Appliance4,Tumble Dryer,0.0
+Appliance5,Dishwasher,0.0
+Appliance6,Washing Machine,0.0
+Appliance7,Television Site,0.0
+Appliance8,Microwave,0.0
