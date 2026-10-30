@@ -11,7 +11,11 @@ We estimate washing-machine power from one-minute whole-home readings using a si
 | House 3 test | two_stage_hgb | 48.487 | 347.226 | 42.836 | 53.030 |
 | 6-house mean | two_stage_hgb | 46.667 | 356.673 | 36.995 | 78.569 |
 
-Overlapping high-power appliances cause false positives; 94.34% of House 3 evaluated minutes are below the 20 W activity threshold. House 3 overall MAE is 48.49 W versus always-off 28.65 W; total-energy error is 53.03% versus hourly-profile 15.86%. The suitable use is evaluated cycle timing and opt-in feedback, not appliance billing.
+Overlapping high-power appliances cause false positives; 94.34% of House 3 evaluated minutes are below the 20 W activity threshold. House 3 overall MAE is 48.49 W versus always-off 28.65 W; total-energy error is 53.03% versus hourly-profile 15.86%. Across six houses, always-off mean MAE is 26.23 W and usage_profile mean energy error is 61.79%. The suitable use is evaluated cycle timing and opt-in feedback, not appliance billing.
+
+## Model choice
+
+An exploratory variant with future-window features reached 60.06% House 3 minute F1, compared with 42.84% for the final model reported here. It was deliberately dropped because it used future observations and was harder to justify in an interview. Houses 3 and 8 were seen during that exploratory work, so House 3 is not a pristine holdout. We therefore report six-house LOHO as a within-cohort robustness check and still require independent households for external validation.
 
 ## Reproduce
 
@@ -39,7 +43,7 @@ Two household splits are evaluated along with a fixed six-fold leave-one-house-o
 
 ## References and implementation
 
-Design choices, assumptions and pilot evaluation are stated explicitly in the source. Coding tools assisted script implementation and plot formatting; their use does not constitute independent validation.
+The author set the requirements and selected or approved the cleaning thresholds, cycle rule, final model, validation and pilot design. AI coding tools assisted design refinement, script implementation, debugging, drafting and plot formatting; results are checked against the saved outputs.
 
 - Murray, Stankovic & Stankovic (2017), [REFIT data descriptor](https://doi.org/10.1038/sdata.2016.122). Dataset: [University of Strathclyde](https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements/), CC BY 4.0.
 - Zhang et al. (2018), [Seq2Point](https://doi.org/10.1609/aaai.v32i1.11873), related context-window research; this implementation uses tabular trees, not that neural model.

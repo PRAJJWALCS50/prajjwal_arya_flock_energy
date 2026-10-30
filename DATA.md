@@ -60,9 +60,7 @@ Raw-input cell counts include duplicated rows. Removal counts are measured after
 
 Of the 1,211,048 excess timestamp rows, 71.89% have identical powers and missingness to the first source row at that timestamp; 28.11% differ. Mean absolute difference between keep-last and per-timestamp means is 1.211 W across finite channel/timestamp pairs in duplicated groups. This comparison uses original power values before outlier masking; missing values compare equal for the identical/conflicting classification.
 
-The raw House 1 start label 14:06:17 differs from the cleaned label 13:06:17 on 2013-10-09 by one hour, consistent with BST (UTC+1) and the documented daylight-saving correction. Raw inspection uses the supplied Unix-to-UTC timeline; the offset alone does not establish both source clocks were correctly calibrated. Section 1 washing-machine EDA hour/weekday tables retain the cleaned source timestamp convention; the House 3 model illustration explicitly converts UTC to Europe/London local time.
-
-After minute averaging, linearly interpolate complete missing runs of one or two consecutive bins when readings exist on both sides. Runs of three or more minutes remain NaN and are flagged as outages; no part of a longer run is filled.
+The raw House 1 start label (2013-10-09 14:06:17) and cleaned start label (13:06:17) differ by 3,600 seconds. The cause is unconfirmed: a distinctive common event has not been matched, so the file-start difference is not evidence of a BST correction. Raw inspection converts the supplied Unix values to UTC; EDA hour/weekday tables retain the cleaned source clock, documented as UTC. The House 3 model illustration explicitly converts that cleaned UTC clock to Europe/London local time.
 
 ## Before and after cleaning
 

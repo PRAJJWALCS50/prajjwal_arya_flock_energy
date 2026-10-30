@@ -2,7 +2,7 @@
 
 The simple two-stage model estimates when washing-machine sessions occur from one-minute whole-home power. On House 3 its cycle precision/recall/F1 are **43.41% / 65.09% / 52.09%**, with **9.0 minutes** median start error among matched cycles. However, **56.6%** of predicted cycles are unmatched and **34.9%** of reference cycles are missed. The six-house LOHO results in [RESULTS.md](RESULTS.md) show the variation across homes.
 
-Test overall MAE is **48.49 W**, versus **28.65 W** for always-off. Total-energy error is **53.03%**, versus **15.86%** for a training-only hourly profile. 94.34% of evaluated minutes are inactive (<20 W); static energy totals alone do not justify the ML model. Its proposed value is evaluated event timing for opt-in feedback, not billing, automatic switching or fault diagnosis.
+Test overall MAE is **48.49 W**, versus **28.65 W** for always-off. Total-energy error is **53.03%**, versus **15.86%** for a training-only hourly profile. 94.34% of evaluated minutes are inactive (<20 W); static energy totals alone do not justify the ML model. Across six held-out houses, always-off mean MAE is **26.23 W** and usage_profile mean energy error is **61.79%**. Its proposed value is evaluated event timing for opt-in feedback, not billing, automatic switching or fault diagnosis.
 
 ## Practical pilot
 

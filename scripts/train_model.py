@@ -64,8 +64,8 @@ def prepare(h):
     return result
 
 
-def predict_watts(p, watts, index, tau):
-    on = p >= tau
+def predict_watts(p, watts, index, threshold):
+    on = p >= threshold
     breaks = np.r_[True, np.diff(index.as_unit("ns").asi8) != 60 * 10**9]
     starts = np.flatnonzero(on & (breaks | ~np.r_[False, on[:-1]]))
     ends = np.flatnonzero(on & (np.r_[breaks[1:], True] | ~np.r_[on[1:], False]))
@@ -223,21 +223,23 @@ def fit_and_evaluate():
         p = clf.predict_proba(vx)[:, 1]
         power = reg.predict(vx)
         search = []
-        for tau in np.arange(0.05, 1, 0.05):
-            pred = predict_watts(p, power, vx.index, tau)
-            search.append(dict(threshold=round(float(tau), 2), **metric(vy, pred)))
+        for threshold in np.arange(0.05, 1, 0.05):
+            pred = predict_watts(p, power, vx.index, threshold)
+            search.append(
+                dict(threshold=round(float(threshold), 2), **metric(vy, pred))
+            )
         search = pd.DataFrame(search)
         chosen = search.sort_values(["F1_pct", "MAE_W"], ascending=[False, True]).iloc[
             0
         ]
-        tau = float(chosen.threshold)
+        threshold = float(chosen.threshold)
         search.to_csv(O / f"fold_{test_house}_validation_search.csv", index=False)
         settings.append(
             dict(
                 test_house=test_house,
                 validation_house=val_house,
                 training_houses=",".join(map(str, train)),
-                threshold=tau,
+                threshold=threshold,
                 median_active_power_W=median,
             )
         )
@@ -248,12 +250,12 @@ def fit_and_evaluate():
         ]:
             x, y, a = pack
             p = clf.predict_proba(x)[:, 1]
-            pred = predict_watts(p, reg.predict(x), x.index, tau)
+            pred = predict_watts(p, reg.predict(x), x.index, threshold)
             values = {
                 "always_off": np.zeros(len(y)),
                 "usage_profile": profile[y.index.hour],
                 "plain_classifier": predict_watts(
-                    p, np.full(len(y), median), x.index, tau
+                    p, np.full(len(y), median), x.index, threshold
                 ),
                 "two_stage_hgb": pred,
             }
@@ -604,7 +606,10 @@ def make_reports():
         (coverage_counts.fold == 3) & (coverage_counts.split == "test")
     ].iloc[0]
     inactive_pct = 100 * (1 - coverage_row.active_minutes / coverage_row.minutes)
-    limitation = f"Overlapping high-power appliances cause false positives; {inactive_pct:.2f}% of House 3 evaluated minutes are below the 20 W activity threshold. House 3 overall MAE is {model.MAE_W:.2f} W versus always-off {off.MAE_W:.2f} W; total-energy error is {model.SAE_pct:.2f}% versus hourly-profile {profile.SAE_pct:.2f}%. The suitable use is evaluated cycle timing and opt-in feedback, not appliance billing.\n\n"
+    off_mean = loho[loho.predictor == "always_off"].MAE_W.mean()
+    profile_mean = loho[loho.predictor == "usage_profile"].SAE_pct.mean()
+    model_mean = loho[loho.predictor == "two_stage_hgb"]
+    limitation = f"Overlapping high-power appliances cause false positives; {inactive_pct:.2f}% of House 3 evaluated minutes are below the 20 W activity threshold. House 3 overall MAE is {model.MAE_W:.2f} W versus always-off {off.MAE_W:.2f} W; total-energy error is {model.SAE_pct:.2f}% versus hourly-profile {profile.SAE_pct:.2f}%. Across six houses, always-off mean MAE is {off_mean:.2f} W and usage_profile mean energy error is {profile_mean:.2f}%, versus {model_mean.MAE_W.mean():.2f} W and {model_mean.SAE_pct.mean():.2f}% for the final model. The suitable use is evaluated cycle timing and opt-in feedback, not appliance billing.\n\n"
     test = pd.read_csv(
         O / "fold_3_test_predictions.csv.gz", index_col="timestamp", parse_dates=True
     )
@@ -774,10 +779,12 @@ The summary reports unweighted household means, sample SD, medians and Q1–Q3. 
         + table(pd.DataFrame(json.loads((O / "metadata.json").read_text())["folds"]))
     )
     (root / "RESULTS.md").write_text(text, encoding="utf-8")
+    model_choice = f"## Model choice\n\nAn exploratory variant with future-window features reached 60.06% House 3 minute F1, compared with {model.F1_pct:.2f}% for the final model reported here. It was deliberately dropped because it used future observations and was harder to justify in an interview. Houses 3 and 8 were seen during that exploratory work, so House 3 is not a pristine holdout. We therefore report six-house LOHO as a within-cohort robustness check and still require independent households for external validation.\n\n"
     readme = (
         "# REFIT washing-machine disaggregation\n\n"
         + lead
         + limitation
+        + model_choice
         + """## Reproduce
 
 Use 64-bit Python 3.12 and CPU training with several GB of RAM. Extract raw House 1 Part1/Part2 and official cleaned Houses 1,2,3,7,8,10 outside Git.
@@ -804,7 +811,7 @@ Two household splits are evaluated along with a fixed six-fold leave-one-house-o
 
 ## References and implementation
 
-Design choices, assumptions and pilot evaluation are stated explicitly in the source. Coding tools assisted script implementation and plot formatting; their use does not constitute independent validation.
+The author set the requirements and selected or approved the cleaning thresholds, cycle rule, final model, validation and pilot design. AI coding tools assisted design refinement, script implementation, debugging, drafting and plot formatting; results are checked against the saved outputs.
 
 - Murray, Stankovic & Stankovic (2017), [REFIT data descriptor](https://doi.org/10.1038/sdata.2016.122). Dataset: [University of Strathclyde](https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements/), CC BY 4.0.
 - Zhang et al. (2018), [Seq2Point](https://doi.org/10.1609/aaai.v32i1.11873), related context-window research; this implementation uses tabular trees, not that neural model.
@@ -817,7 +824,7 @@ Design choices, assumptions and pilot evaluation are stated explicitly in the so
 
 The simple two-stage model estimates when washing-machine sessions occur from one-minute whole-home power. On House 3 its cycle precision/recall/F1 are **{c.cycle_precision_pct:.2f}% / {c.cycle_recall_pct:.2f}% / {c.cycle_F1_pct:.2f}%**, with **{c.median_start_error_min:.1f} minutes** median start error among matched cycles. However, **{false_share:.1f}%** of predicted cycles are unmatched and **{miss_share:.1f}%** of reference cycles are missed. The six-house LOHO results in [RESULTS.md](RESULTS.md) show the variation across homes.
 
-Test overall MAE is **{model.MAE_W:.2f} W**, versus **{off.MAE_W:.2f} W** for always-off. Total-energy error is **{model.SAE_pct:.2f}%**, versus **{profile.SAE_pct:.2f}%** for a training-only hourly profile. {inactive_pct:.2f}% of evaluated minutes are inactive (<20 W); static energy totals alone do not justify the ML model. Its proposed value is evaluated event timing for opt-in feedback, not billing, automatic switching or fault diagnosis.
+Test overall MAE is **{model.MAE_W:.2f} W**, versus **{off.MAE_W:.2f} W** for always-off. Total-energy error is **{model.SAE_pct:.2f}%**, versus **{profile.SAE_pct:.2f}%** for a training-only hourly profile. {inactive_pct:.2f}% of evaluated minutes are inactive (<20 W); static energy totals alone do not justify the ML model. Across the six held-out houses, always-off mean MAE is **{off_mean:.2f} W** and usage_profile mean energy error is **{profile_mean:.2f}%**; the final model averages **{model_mean.MAE_W.mean():.2f} W** and **{model_mean.SAE_pct.mean():.2f}%** respectively. Its proposed value is evaluated event timing for opt-in feedback, not billing, automatic switching or fault diagnosis.
 
 ## Practical pilot
 
